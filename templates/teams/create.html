@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Create Team | Team Challenge Tracker{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card page-card border-0">
+        <div class="card-body p-4 p-md-5">
+          <div class="mb-4">
+            <h1 class="h2 mb-1">Create a team</h1>
+            <p class="text-body-secondary mb-0">Set up a public team that anyone can browse and join.</p>
+          </div>
+
+          <form method="post" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+              {{ form.name.label(class="form-label") }}
+              {{ form.name(class="form-control", placeholder="Weekend Runners") }}
+              {% for error in form.name.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="mb-4">
+              {{ form.description.label(class="form-label") }}
+              {{ form.description(class="form-control", rows="5", placeholder="Who this team is for and what kinds of challenges you run.") }}
+              {% for error in form.description.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="d-flex gap-2">
+              {{ form.submit(class="btn btn-primary") }}
+              <a class="btn btn-outline-secondary" href="{{ url_for('teams.index') }}">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

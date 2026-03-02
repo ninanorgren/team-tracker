@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Activity | Team Challenge Tracker{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card page-card border-0">
+        <div class="card-body p-4 p-md-5">
+          <div class="mb-4">
+            <h1 class="h2 mb-1">Edit activity</h1>
+            <p class="text-body-secondary mb-0">
+              For
+              <a class="text-decoration-none" href="{{ url_for('challenges.detail', id=activity.challenge.id) }}">{{ activity.challenge.title }}</a>
+            </p>
+          </div>
+
+          <form method="post" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+              {{ form.activity_date.label(class="form-label") }}
+              {{ form.activity_date(class="form-control", type="date") }}
+              {% for error in form.activity_date.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-check mb-3">
+              {{ form.is_checked(class="form-check-input") }}
+              {{ form.is_checked.label(class="form-check-label") }}
+            </div>
+
+            <div class="mb-4">
+              {{ form.note.label(class="form-label") }}
+              {{ form.note(class="form-control", rows="4") }}
+              {% for error in form.note.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="d-flex gap-2">
+              {{ form.submit(class="btn btn-primary") }}
+              <a class="btn btn-outline-secondary" href="{{ url_for('challenges.detail', id=activity.challenge.id) }}">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card discussion-card border-0 mt-4">
+        <div class="card-body p-4 p-md-5">
+          <h2 class="h4 mb-3">Comments</h2>
+          <form method="post" action="{{ url_for('comments.create_activity_comment', id=activity.id) }}" class="mb-4">
+            {{ comment_form.hidden_tag() }}
+            <div class="mb-2">
+              {{ comment_form.body(class="form-control", rows="3", placeholder="Add a comment to this activity.") }}
+            </div>
+            {{ comment_form.submit(class="btn btn-outline-secondary") }}
+          </form>
+
+          {% if activity.comments %}
+            <div class="d-flex flex-column gap-3">
+              {% for comment in activity.comments|sort(attribute='created_at', reverse=True) %}
+                <div class="border rounded p-3">
+                  <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                    <div class="fw-semibold">{{ comment.user.display_name }}</div>
+                    <div class="small text-body-secondary">{{ comment.created_at.strftime("%Y-%m-%d %H:%M") }}</div>
+                  </div>
+                  <p class="mb-0 text-body-secondary">{{ comment.body }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-body-secondary mb-0">No comments on this activity yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

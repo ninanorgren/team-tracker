@@ -1,0 +1,8 @@
+.env
+.pytest_cache/
+__pycache__/
+instance/
+*.db
+*.pyc
+*.pyo
+*.sqlite3

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team.name }} | Team Challenge Tracker{% endblock %}
+
+{% block content %}
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card page-card border-0">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div>
+              <h1 class="h2 mb-1">{{ team.name }}</h1>
+              <div class="text-body-secondary">Created by {{ team.created_by.display_name }}</div>
+            </div>
+            <span class="badge text-bg-light">{{ team.memberships|length }} members</span>
+          </div>
+
+          <p class="mb-0">{{ team.description }}</p>
+        </div>
+      </div>
+
+      <div class="card section-card border-0 mt-4">
+        <div class="card-body p-4">
+          {% if is_member %}
+            <div class="mb-4">
+              <h2 class="h4 mb-3">Team scoreboard</h2>
+              {% if scoreboard %}
+                <div class="d-flex flex-column gap-2">
+                  {% for entry in scoreboard %}
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 scoreboard-row">
+                      <div>
+                        <span class="text-body-secondary small me-2">
+                          {% if loop.index == 1 %}
+                            🥇 #{{ loop.index }}
+                          {% elif loop.index == 2 %}
+                            🥈 #{{ loop.index }}
+                          {% elif loop.index == 3 %}
+                            🥉 #{{ loop.index }}
+                          {% else %}
+                            #{{ loop.index }}
+                          {% endif %}
+                        </span>
+                        <span class="fw-semibold">{{ entry.display_name }}</span>
+                      </div>
+                      <span class="badge text-bg-light">{{ entry.score }} check-ins</span>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="text-body-secondary mb-0">No team activity has been logged yet.</p>
+              {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h2 class="h4 mb-0">Challenges</h2>
+              <a class="btn btn-primary btn-sm" href="{{ url_for('challenges.create', team=team.id) }}">Create challenge</a>
+            </div>
+
+            {% if team.challenges %}
+              <div class="row g-3">
+                {% for challenge in team.challenges %}
+                  <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                      <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                        <h3 class="h5 mb-0">
+                          <a class="text-decoration-none" href="{{ url_for('challenges.detail', id=challenge.id) }}">{{ challenge.title }}</a>
+                        </h3>
+                        <span class="badge text-bg-light">{{ challenge.memberships|length }} joined</span>
+                      </div>
+                      <p class="text-body-secondary small mb-2">{{ challenge.description }}</p>
+                      <div class="small text-body-secondary">
+                        {{ challenge.start_date.strftime("%Y-%m-%d") }} to {{ challenge.end_date.strftime("%Y-%m-%d") }}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-body-secondary mb-0">No challenges have been created for this team yet.</p>
+            {% endif %}
+          {% else %}
+            <h2 class="h4 mb-3">Inside the team</h2>
+            <p class="text-body-secondary mb-0">
+              Join this team to see its challenges and other member-only content.
+            </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card section-card border-0 mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-3">Membership</h2>
+          {% if current_user.is_authenticated %}
+            {% if is_member %}
+              <p class="text-success fw-semibold mb-0">You are already a member of this team.</p>
+            {% else %}
+              <form method="post" action="{{ url_for('teams.join', slug=team.slug) }}">
+                {{ join_form.hidden_tag() }}
+                {{ join_form.submit(class="btn btn-primary w-100") }}
+              </form>
+            {% endif %}
+          {% else %}
+            <p class="text-body-secondary mb-3">Log in to join this public team.</p>
+            <a class="btn btn-outline-secondary w-100" href="{{ url_for('auth.login', next=request.path) }}">Log in</a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if is_member %}
+        <div class="card section-card border-0">
+          <div class="card-body p-4">
+            <h2 class="h5 mb-3">Members</h2>
+            {% if team.memberships %}
+              <ul class="list-unstyled mb-0">
+                {% for membership in team.memberships %}
+                  <li class="py-2 border-top {% if loop.first %}border-top-0 pt-0{% endif %}">
+                    {{ membership.user.display_name }}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-body-secondary mb-0">No one has joined this team yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
