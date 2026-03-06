@@ -4,6 +4,7 @@ from flask_login import current_user, login_required
 from app.comments.forms import CommentForm
 from app.extensions import db
 from app.models import Activity, ActivityComment, Challenge, ChallengeComment, TeamMembership
+from app.notifications.service import notify_challenge_event
 
 
 comments_bp = Blueprint("comments", __name__)
@@ -41,6 +42,15 @@ def create_activity_comment(id):
     db.session.add(comment)
     db.session.commit()
 
+    notify_challenge_event(
+        challenge_id=activity.challenge_id,
+        actor_user_id=current_user.id,
+        title=f"{current_user.display_name} commented on activity",
+        body=activity.challenge.title,
+        url=f"{url_for('challenges.detail', id=activity.challenge_id)}#activity-comment-{comment.id}",
+        tag=f"challenge-{activity.challenge_id}-activity-comment-{comment.id}",
+    )
+
     flash("Your comment has been posted.", "success")
     return redirect(url_for("challenges.detail", id=activity.challenge_id))
 
@@ -65,6 +75,15 @@ def create_challenge_comment(id):
     )
     db.session.add(comment)
     db.session.commit()
+
+    notify_challenge_event(
+        challenge_id=challenge.id,
+        actor_user_id=current_user.id,
+        title=f"{current_user.display_name} commented on challenge",
+        body=challenge.title,
+        url=f"{url_for('challenges.detail', id=challenge.id)}#challenge-comment-{comment.id}",
+        tag=f"challenge-{challenge.id}-comment-{comment.id}",
+    )
 
     flash("Your comment has been posted.", "success")
     return redirect(url_for("challenges.detail", id=challenge.id))

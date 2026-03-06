@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Team | Team Challenge Tracker{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card page-card border-0">
+        <div class="card-body p-4 p-md-5">
+          <div class="mb-4">
+            <h1 class="h2 mb-1">Edit team description</h1>
+            <p class="text-body-secondary mb-0">Update the public description for {{ team.name }}.</p>
+          </div>
+
+          <form method="post" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="mb-4">
+              {{ form.description.label(class="form-label") }}
+              {{ form.description(class="form-control", rows="8", placeholder="Describe your team goals, rules, and fun details.") }}
+              <div class="form-text">Markdown syntax is supported.</div>
+              {% for error in form.description.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="d-flex gap-2">
+              {{ form.submit(class="btn btn-primary") }}
+              <a class="btn btn-outline-secondary" href="{{ url_for('teams.detail', slug=team.slug) }}">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

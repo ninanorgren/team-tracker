@@ -6,8 +6,10 @@ from sqlalchemy import and_, func
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.extensions import db
-from app.models import Activity, Challenge, Team, TeamMembership, User
-from app.teams.forms import JoinTeamForm, TeamForm
+from app.models import Activity, Challenge, Team, TeamMembership, TeamNotificationSetting, User
+from app.notifications.forms import TeamNotificationForm
+from app.notifications.service import resolve_team_notification_enabled
+from app.teams.forms import JoinTeamForm, TeamDescriptionForm, TeamForm
 
 
 teams_bp = Blueprint("teams", __name__)
@@ -114,9 +116,15 @@ def detail(slug):
         .first_or_404()
     )
     join_form = JoinTeamForm()
-    is_member = current_user.is_authenticated and any(
-        membership.user_id == current_user.id for membership in team.memberships
-    )
+    is_member = False
+    if current_user.is_authenticated:
+        is_member = (
+            TeamMembership.query.filter_by(
+                team_id=team.id,
+                user_id=current_user.id,
+            ).first()
+            is not None
+        )
     if is_member:
         team = (
             Team.query.options(
@@ -128,8 +136,13 @@ def detail(slug):
             .first_or_404()
         )
         scoreboard = scoreboard_for_team(team)
+        team_notification_form = TeamNotificationForm(prefix=f"team-notify-{team.id}")
+        team_notification_form.enabled.data = (
+            "1" if resolve_team_notification_enabled(current_user.id, team.id) else "0"
+        )
     else:
         scoreboard = []
+        team_notification_form = None
 
     return render_template(
         "teams/detail.html",
@@ -137,6 +150,34 @@ def detail(slug):
         join_form=join_form,
         is_member=is_member,
         scoreboard=scoreboard,
+        team_notification_form=team_notification_form,
+    )
+
+
+@teams_bp.route("/teams/<slug>/edit", methods=["GET", "POST"])
+@login_required
+def edit(slug):
+    team = Team.query.filter_by(slug=slug).first_or_404()
+    membership = TeamMembership.query.filter_by(
+        team_id=team.id,
+        user_id=current_user.id,
+    ).first()
+
+    if not membership:
+        flash("You must be a team member to edit this description.", "danger")
+        return redirect(url_for("teams.detail", slug=team.slug))
+
+    form = TeamDescriptionForm(obj=team)
+    if form.validate_on_submit():
+        team.description = form.description.data.strip()
+        db.session.commit()
+        flash("Team description has been updated.", "success")
+        return redirect(url_for("teams.detail", slug=team.slug))
+
+    return render_template(
+        "teams/edit.html",
+        team=team,
+        form=form,
     )
 
 

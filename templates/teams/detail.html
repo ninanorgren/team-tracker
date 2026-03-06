@@ -15,7 +15,8 @@
             <span class="badge text-bg-light">{{ team.memberships|length }} members</span>
           </div>
 
-          <p class="mb-0">{{ team.description }}</p>
+          <div class="team-description mb-3">{{ team.description | markdown }}</div>
+
         </div>
       </div>
 
@@ -95,6 +96,18 @@
           {% if current_user.is_authenticated %}
             {% if is_member %}
               <p class="text-success fw-semibold mb-0">You are already a member of this team.</p>
+              <a class="btn btn-outline-secondary btn-sm mt-3 w-100" href="{{ url_for('teams.edit', slug=team.slug) }}">
+                Edit team description
+              </a>
+              <hr>
+              <form method="post" action="{{ url_for('notifications.update_team_setting', slug=team.slug) }}">
+                {{ team_notification_form.hidden_tag() }}
+                <div class="mb-2">
+                  {{ team_notification_form.enabled.label(class="form-label small mb-1") }}
+                  {{ team_notification_form.enabled(class="form-select form-select-sm") }}
+                </div>
+                {{ team_notification_form.submit(class="btn btn-outline-secondary btn-sm w-100") }}
+              </form>
             {% else %}
               <form method="post" action="{{ url_for('teams.join', slug=team.slug) }}">
                 {{ join_form.hidden_tag() }}

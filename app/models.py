@@ -71,6 +71,21 @@ class User(UserMixin, db.Model):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    push_subscriptions = db.relationship(
+        "PushSubscription",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    team_notification_settings = db.relationship(
+        "TeamNotificationSetting",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    challenge_notification_settings = db.relationship(
+        "ChallengeNotificationSetting",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -117,6 +132,11 @@ class Team(db.Model):
     )
     challenges = db.relationship(
         "Challenge",
+        back_populates="team",
+        cascade="all, delete-orphan",
+    )
+    notification_settings = db.relationship(
+        "TeamNotificationSetting",
         back_populates="team",
         cascade="all, delete-orphan",
     )
@@ -170,6 +190,11 @@ class Challenge(db.Model):
     )
     comments = db.relationship(
         "ChallengeComment",
+        back_populates="challenge",
+        cascade="all, delete-orphan",
+    )
+    notification_settings = db.relationship(
+        "ChallengeNotificationSetting",
         back_populates="challenge",
         cascade="all, delete-orphan",
     )
@@ -265,3 +290,62 @@ class ActivityReaction(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
     activity = db.relationship("Activity", back_populates="reactions")
     user = db.relationship("User", back_populates="activity_reactions")
+
+
+class PushSubscription(db.Model):
+    __tablename__ = "push_subscriptions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    endpoint = db.Column(db.Text, unique=True, nullable=False)
+    p256dh_key = db.Column(db.Text, nullable=False)
+    auth_key = db.Column(db.Text, nullable=False)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    user_agent = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=utcnow,
+        onupdate=utcnow,
+    )
+    last_seen_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    user = db.relationship("User", back_populates="push_subscriptions")
+
+
+class TeamNotificationSetting(db.Model):
+    __tablename__ = "team_notification_settings"
+    __table_args__ = (db.UniqueConstraint("team_id", "user_id"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey("teams.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    enabled = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=utcnow,
+        onupdate=utcnow,
+    )
+    team = db.relationship("Team", back_populates="notification_settings")
+    user = db.relationship("User", back_populates="team_notification_settings")
+
+
+class ChallengeNotificationSetting(db.Model):
+    __tablename__ = "challenge_notification_settings"
+    __table_args__ = (db.UniqueConstraint("challenge_id", "user_id"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    challenge_id = db.Column(db.Integer, db.ForeignKey("challenges.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    enabled = db.Column(db.Boolean, nullable=True, default=None)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=utcnow,
+        onupdate=utcnow,
+    )
+    challenge = db.relationship("Challenge", back_populates="notification_settings")
+    user = db.relationship("User", back_populates="challenge_notification_settings")

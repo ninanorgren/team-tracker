@@ -29,7 +29,7 @@
                 <span class="badge text-bg-light">{{ team.memberships|length }} members</span>
               </div>
 
-              <p class="text-body-secondary flex-grow-1 mb-4">{{ team.description }}</p>
+              <div class="text-body-secondary flex-grow-1 mb-4 team-description">{{ team.description | markdown }}</div>
 
               <div class="d-flex justify-content-between align-items-center">
                 <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('teams.detail', slug=team.slug) }}">View team</a>

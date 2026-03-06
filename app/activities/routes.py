@@ -6,6 +6,7 @@ from app.comments.forms import CommentForm
 from app.activities.forms import ActivityForm
 from app.extensions import db
 from app.models import Activity, ActivityComment, Challenge, ChallengeMembership
+from app.notifications.service import notify_challenge_event
 
 
 activities_bp = Blueprint("activities", __name__)
@@ -50,6 +51,16 @@ def checkin(id):
         )
         db.session.add(activity)
         db.session.commit()
+
+        status_text = "checked in" if activity.is_checked else "logged activity"
+        notify_challenge_event(
+            challenge_id=challenge.id,
+            actor_user_id=current_user.id,
+            title=f"{current_user.display_name} {status_text}",
+            body=f"{challenge.title} on {activity.activity_date.strftime('%Y-%m-%d')}",
+            url=f"{url_for('challenges.detail', id=challenge.id)}#activity-{activity.id}",
+            tag=f"challenge-{challenge.id}-activity-{activity.id}",
+        )
 
         flash("Your activity has been logged.", "success")
         return redirect(url_for("challenges.detail", id=challenge.id))

@@ -472,15 +472,33 @@ These features may be added later:
 
 streak tracking
 
-reactions
-
-team leaderboards
-
 push notifications
 
 mobile support
 
 Design code so these can be added later.
+
+19. Production and Hardening Notes
+
+Current production/runtime setup now includes:
+
+- Dockerfile and docker-compose for app + MySQL deployment
+- Gunicorn for production serving
+- `.env.production` / `.env.production.example` for environment configuration
+- compose mapping `7050:7000`
+
+Current anti-bot hardening now includes:
+
+- Flask-Limiter on register/login auth routes
+- Registration honeypot field
+- Google reCAPTCHA on registration
+
+Current implemented extensions:
+
+- Team aggregate scoreboard (team page, across all team challenges)
+- Activity emoji reactions with dropdown chooser
+- Team challenge internals still hidden from non-members
+- Docker production path for MySQL-backed runtime
 
 18. Guidance for AI Coding Agents
 

@@ -11,11 +11,17 @@ from app.models import (
     ActivityComment,
     ActivityReaction,
     Challenge,
+    ChallengeNotificationSetting,
     ChallengeComment,
     ChallengeMembership,
     Team,
     TeamMembership,
     User,
+)
+from app.notifications.forms import ChallengeNotificationForm
+from app.notifications.service import (
+    resolve_challenge_notification_enabled,
+    resolve_team_notification_enabled,
 )
 from app.reactions.forms import REACTION_EMOJIS, ReactionForm
 
@@ -161,6 +167,33 @@ def detail(id):
             if current_user_id is not None and reaction.user_id == current_user_id:
                 reaction_summaries[activity.id][reaction.emoji]["reacted"] = True
 
+    challenge_notification_form = ChallengeNotificationForm(prefix=f"challenge-notify-{challenge.id}")
+    challenge_setting = ChallengeNotificationSetting.query.filter_by(
+        challenge_id=challenge.id,
+        user_id=current_user.id,
+    ).first()
+    if challenge_setting is None:
+        challenge_notification_form.mode.data = "inherit"
+        challenge_notification_mode = "inherit"
+    elif challenge_setting.enabled:
+        challenge_notification_form.mode.data = "enabled"
+        challenge_notification_mode = "enabled"
+    else:
+        challenge_notification_form.mode.data = "disabled"
+        challenge_notification_mode = "disabled"
+
+    effective_notifications_enabled, effective_notifications_source = (
+        resolve_challenge_notification_enabled(
+            current_user.id,
+            challenge.team_id,
+            challenge.id,
+        )
+    )
+    team_notifications_enabled = resolve_team_notification_enabled(
+        current_user.id,
+        challenge.team_id,
+    )
+
     return render_template(
         "challenges/detail.html",
         challenge=challenge,
@@ -173,6 +206,11 @@ def detail(id):
         activity_reaction_forms=activity_reaction_forms,
         reaction_summaries=reaction_summaries,
         reaction_emojis=REACTION_EMOJIS,
+        challenge_notification_form=challenge_notification_form,
+        challenge_notification_mode=challenge_notification_mode,
+        effective_notifications_enabled=effective_notifications_enabled,
+        effective_notifications_source=effective_notifications_source,
+        team_notifications_enabled=team_notifications_enabled,
     )
 
 

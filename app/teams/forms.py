@@ -13,7 +13,15 @@ class TeamForm(FlaskForm):
         validators=[DataRequired(), Length(max=120)],
     )
     description = TextAreaField(
-        "Description",
+        "Description (Markdown supported)",
         validators=[DataRequired(), Length(max=1000)],
     )
     submit = SubmitField("Create team")
+
+
+class TeamDescriptionForm(FlaskForm):
+    description = TextAreaField(
+        "Description (Markdown supported)",
+        validators=[DataRequired(), Length(max=1000)],
+    )
+    submit = SubmitField("Save description")
