@@ -1,0 +1,41 @@
+services:
+  mysql:
+    image: mysql:8.0
+    env_file:
+      - .env.production
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -u ${MYSQL_USER:-tracker} -p${MYSQL_PASSWORD:-change_me}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  web:
+    build: .
+    env_file:
+      - .env.production
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      FLASK_APP: run.py
+      FLASK_ENV: production
+      SECRET_KEY: ${SECRET_KEY:-replace-with-a-long-random-secret}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-3}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-team_tracker}
+      MYSQL_USER: ${MYSQL_USER:-tracker}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change_me}
+    command: >
+      sh -c "export DATABASE_URL=mysql+pymysql://$$MYSQL_USER:$$MYSQL_PASSWORD@mysql:3306/$$MYSQL_DATABASE && flask db upgrade && exec gunicorn --bind 0.0.0.0:7000 --workers $$GUNICORN_WORKERS run:app"
+    ports:
+      - "7050:7000"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
