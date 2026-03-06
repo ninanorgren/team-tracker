@@ -22,12 +22,17 @@ class RegistrationForm(FlaskForm):
         "Confirm password",
         validators=[DataRequired(), EqualTo("password")],
     )
+    honeypot = StringField("Website")
     submit = SubmitField("Create account")
 
     def validate_email(self, field):
         existing_user = User.query.filter_by(email=field.data.strip().lower()).first()
         if existing_user:
             raise ValidationError("An account already exists for that email address.")
+
+    def validate_honeypot(self, field):
+        if field.data and field.data.strip():
+            raise ValidationError("Nice try.")
 
 
 class LoginForm(FlaskForm):

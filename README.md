@@ -10,6 +10,13 @@ This app can be run in production with Docker and Docker Compose using a MySQL d
 cp .env.production.example .env.production
 ```
 
+Edit `.env.production` with valid production values, including reCAPTCHA keys:
+
+```
+RECAPTCHA_SITE_KEY=...
+RECAPTCHA_SECRET_KEY=...
+```
+
 2. Start services:
 
 ```bash
